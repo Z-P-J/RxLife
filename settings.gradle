@@ -1,1 +1,1 @@
-include ':app', ':rxlifehelper'
+include ':app', ':rxlife'
