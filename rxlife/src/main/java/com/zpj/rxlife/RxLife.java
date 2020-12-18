@@ -8,9 +8,11 @@ import android.arch.lifecycle.LifecycleRegistry;
 import android.arch.lifecycle.OnLifecycleEvent;
 import android.content.Context;
 import android.support.annotation.MainThread;
+import android.util.Log;
 import android.view.View;
 
 import java.util.HashMap;
+import java.util.Objects;
 
 import io.reactivex.Observable;
 import io.reactivex.annotations.NonNull;
@@ -26,30 +28,41 @@ public class RxLife {
     /**
      * 处理tag 发送事件形式的绑定处理
      */
-    private static final PublishSubject<String> TAG_EVENT_SUBJECT = PublishSubject.create();
+    private static PublishSubject<Object> TAG_EVENT_SUBJECT;
 
-    public static <T> LifecycleTransformer<T> bindTag(final String tag) {
+    public static <T> LifecycleTransformer<T> bindTag(final Object tag) {
         return bindTag(tag, true);
     }
 
-    public static <T> LifecycleTransformer<T> bindTag(final String tag, boolean disposeBefore) {
+    public static <T> LifecycleTransformer<T> bindTag(final Object tag, boolean disposeBefore) {
         if (tag == null) {
             return bindError(
                     new NullPointerException("RxLifeHelper: parameter tag can not be null"));
         }
         if (disposeBefore) {
-            removeTag(tag);
+            removeByTag(tag);
         }
-        return bind(TAG_EVENT_SUBJECT.filter(new Predicate<String>() {
+        return bind(getTagEventSubject().filter(new Predicate<Object>() {
             @Override
-            public boolean test(@NonNull String innerTag) throws Exception {
-                return tag.equals(innerTag);
+            public boolean test(@NonNull Object innerTag) throws Exception {
+                return Objects.equals(tag, innerTag);
             }
         }));
     }
 
-    public static void removeTag(String tag) {
-        TAG_EVENT_SUBJECT.onNext(tag);
+    public static void removeByTag(Object tag) {
+        getTagEventSubject().onNext(tag);
+    }
+
+    private static PublishSubject<Object> getTagEventSubject() {
+        if (TAG_EVENT_SUBJECT == null) {
+            synchronized (RxLife.class) {
+                if (TAG_EVENT_SUBJECT == null) {
+                    TAG_EVENT_SUBJECT = PublishSubject.create();
+                }
+            }
+        }
+        return TAG_EVENT_SUBJECT;
     }
 
     @MainThread
@@ -108,9 +121,6 @@ public class RxLife {
         if (lifecycleOwner == null) {
             return bindNullError("RxLifeHelper: target could not be null");
         }
-        if (lifecycleOwner.getLifecycle() == null) {
-            return bindNullError("RxLifeHelper: lifecycle could not be null");
-        }
         if (lifecycleOwner.getLifecycle().getCurrentState() == Lifecycle.State.DESTROYED) {
             return bindNullError("RxLifeHelper: LifecycleOwner was destroyed");
         }
@@ -142,9 +152,6 @@ public class RxLife {
         if (lifecycleOwner == null) {
             return bindNullError("RxLifeHelper: target could not be null");
         }
-        if (lifecycleOwner.getLifecycle() == null) {
-            return bindNullError("RxLifeHelper: lifecycle could not be null");
-        }
         if (lifecycleOwner.getLifecycle().getCurrentState() == Lifecycle.State.DESTROYED) {
             return bindNullError("RxLifeHelper: LifecycleOwner was destroyed");
         }
@@ -153,18 +160,15 @@ public class RxLife {
     }
 
     private static RxLifecycleOwner getLifeManager(@NonNull final LifecycleOwner lifecycleOwner) {
-        RxLifecycleOwner lifeCycleManager = TAG_LIFECYCLE_MAP.get(lifecycleOwner);
-        if (lifeCycleManager == null) {
-            synchronized (TAG_LIFECYCLE_MAP) {
-                lifeCycleManager = TAG_LIFECYCLE_MAP.get(lifecycleOwner);
-                if (lifeCycleManager == null) {
-                    lifeCycleManager = new RxLifecycleOwner(lifecycleOwner);
-                    lifecycleOwner.getLifecycle().addObserver(lifeCycleManager);
-                    TAG_LIFECYCLE_MAP.put(lifecycleOwner, lifeCycleManager);
-                }
+        synchronized (TAG_LIFECYCLE_MAP) {
+            RxLifecycleOwner lifeCycleManager = TAG_LIFECYCLE_MAP.get(lifecycleOwner);
+            if (lifeCycleManager == null) {
+                lifeCycleManager = new RxLifecycleOwner(lifecycleOwner);
+                lifecycleOwner.getLifecycle().addObserver(lifeCycleManager);
+                TAG_LIFECYCLE_MAP.put(lifecycleOwner, lifeCycleManager);
             }
+            return lifeCycleManager;
         }
-        return lifeCycleManager;
     }
 
     private static <T> LifecycleTransformer<T> bindNullError(String msg) {

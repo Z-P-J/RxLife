@@ -1,7 +1,7 @@
 # RxLife
 
 ### 轻量级的RxJava生命周期管理库
-### Bind observables to the lifecycle of Activity or Fragment or View in a non-invasive way.
+### A light library which can bind observables to the lifecycle of Activity or Fragment or View in a non-invasive way.
 
 [![](https://img.shields.io/badge/platform-android-brightgreen.svg)](https://developer.android.com/index.html) 
 [ ![API](https://img.shields.io/badge/API-19+-blue.svg?style=flat-square) ](https://developer.android.com/about/versions/android-4.0.html)
@@ -12,9 +12,9 @@
 
 
 
-## 安装
+## Install
 
-#### Latest Version：[![Download](https://api.bintray.com/packages/z-p-j/maven/RxLife/images/download.svg?version-1.0.0)](https://bintray.com/z-p-j/maven/RxLife/1.0.0/link)
+#### Latest Version：[![Download](https://api.bintray.com/packages/z-p-j/maven/RxLife/images/download.svg?version-1.0.1)](https://bintray.com/z-p-j/maven/RxLife/1.0.1/link)
 ```groovy
     // RxJava2
     implementation 'io.reactivex.rxjava2:rxjava:2.2.17'
@@ -24,37 +24,37 @@
     implementation 'com.zpj.rxlife:RxLife:latest_version'
 
 ```
-## 使用（[查看 demo](https://github.com/Z-P-J/RxLife/tree/master/app)）
+## How To Use?（[The demo](https://github.com/Z-P-J/RxLife/tree/master/app)）
 ```java
-// 简单使用
-Observable.timer(10000, TimeUnit.MILLISECONDS)
-    // 绑定Tag
-     .compose(RxLife.<Long>bindTag("Your Tag String"))
-     // 绑定生命周期
-     .compose(RxLife.<Long>bindLifeOwner(this, Lifecycle.Event.ON_PAUSE))
-     // 在配合生命周期的前提下，配合LiveData
-     .compose(RxLife.<Long>bindLifeOwnerLive(this, Lifecycle.Event.ON_PAUSE))
-     .subscribe(new Consumer<Long>() {
-       @Override public void accept(Long aLong) throws Exception {
-         Log.e("RxLifeHelper", "event " + data);
-       }
-     });
+    // 简单使用
+    Observable.timer(10000, TimeUnit.MILLISECONDS)
+        // 绑定Tag
+         .compose(RxLife.<Long>bindTag(object))
+         // 绑定生命周期
+         .compose(RxLife.<Long>bindLifeOwner(this, Lifecycle.Event.ON_PAUSE))
+         // 在配合生命周期的前提下，配合LiveData
+         .compose(RxLife.<Long>bindLifeOwnerLive(this, Lifecycle.Event.ON_PAUSE))
+         .subscribe(new Consumer<Long>() {
+           @Override public void accept(Long aLong) throws Exception {
+             Log.e("RxLifeHelper", "event " + data);
+           }
+         });
 
-// 所用绑定方法
-RxLife.bindLifeOwner(lifecycleOwner);
-RxLife.bindLifeOwner(lifecycleOwner, Lifecycle.Event);
-RxLife.bindView(view);
-RxLife.bindRootView(view);
-RxLife.bindActivity(activity);
-RxLife.bindContext(context);
-RxLife.bindTag("Your Tag String");
-RxLife.bindLifeOwnerLive(lifecycleOwner);
-RxLife.bindLifeOwnerLive(lifecycleOwner, Lifecycle.Event);
-RxLife.bindActivityLive(activity);
-RxLife.bindContextLive(context);
+    // 所用绑定方法
+    RxLife.bindLifeOwner(lifecycleOwner);
+    RxLife.bindLifeOwner(lifecycleOwner, Lifecycle.Event);
+    RxLife.bindView(view);
+    RxLife.bindRootView(view);
+    RxLife.bindActivity(activity);
+    RxLife.bindContext(context);
+    RxLife.bindTag(object);
+    RxLife.bindLifeOwnerLive(lifecycleOwner);
+    RxLife.bindLifeOwnerLive(lifecycleOwner, Lifecycle.Event);
+    RxLife.bindActivityLive(activity);
+    RxLife.bindContextLive(context);
 
-// 根据Tag移除，可在任何地方调用
-RxLife.removeTag("Your Tag String");
+    // 根据Tag移除，可在任何地方调用
+    RxLife.removeByTag(object);
 ```
 
 ## License

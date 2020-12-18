@@ -53,7 +53,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 Toast.makeText(MainActivity.this, "移除Tag:" + TAG, Toast.LENGTH_SHORT).show();
-                RxLife.removeTag(TAG);
+                RxLife.removeByTag(MainActivity.this);
                 btnInit.setVisibility(View.VISIBLE);
             }
         });
@@ -90,7 +90,7 @@ public class MainActivity extends AppCompatActivity {
         Observable.timer(10000, TimeUnit.MILLISECONDS)
 //                .observeOn(Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
-                .compose(RxLife.<Long>bindTag(TAG))
+                .compose(RxLife.<Long>bindTag(this))
                 //配合生命周期
                 .compose(RxLife.<Long>bindLifeOwner(this, Lifecycle.Event.ON_PAUSE))
                 // 在配合生命周期的前提下，配合LiveData
